@@ -1351,464 +1351,464 @@ BOOST_AUTO_TEST_CASE(testBeginTransaction) {
 }
 
 BOOST_AUTO_TEST_CASE(testCppHibernateRestrictions) {
-	CppHibernateJVMConfiguration configuration(ROOT_CLASS_PATH);
-	AbstractClassLoader *loader = new URLClassLoader(configuration.getJNIEnv(),HIBERNATE_LIB_LOCATION);
-	CppHibernateObjectHelper *helper = new CppHibernateObjectHelper(configuration.getJNIEnv(),loader);
-	CppHibernate *hibernate = new CppHibernate(&configuration,loader);
-	CppHibernateSession *session = NULL;
-	CppHibernateTransaction *transaction = NULL;
-
-	session = hibernate->getSessionFactory()->openSession();
-	BOOST_REQUIRE_NO_THROW(transaction = session->beginTransaction());
-
-	//// creates domain objects
-	CppHibernateJObject *obj = helper->createJObjectWith("org.hibernateDomain.Event");
-	CppHibernateJStringObject *title = helper->createJStringObjectWith("hibernateTitle1");
-	obj->setVal("title",title);
-
-	CppHibernateJObject *obj2 = helper->createJObjectWith("org.hibernateDomain.Event");
-	CppHibernateJStringObject *title2 = helper->createJStringObjectWith("hibernateTitle2");
-	obj2->setVal("title",title2);
-
-	CppHibernateJObject *obj3 = helper->createJObjectWith("org.hibernateDomain.Event");
-	CppHibernateJStringObject *title3 = helper->createJStringObjectWith("hibernateTitle3");
-	obj3->setVal("title",title3);
-
-	//// save domain objects
-	session->saveObj(obj);
-	session->saveObj(obj2);
-	session->saveObj(obj3);
-
-	CppHibernateJCollectionObject *res1 = NULL;
-	CppHibernateCriteria criteria = session->createCriteria(obj);
-	criteria.addEq("title",helper->createJStringObjectWith("hibernateTitle2"));
-	res1 = criteria.list();
-	BOOST_REQUIRE(res1->size() == 1);
-	CppHibernateJObject *element = res1->get(0);
-	CppHibernateJStringObject *hibernateTitle2 = dynamic_cast<CppHibernateJStringObject *>(element->getVal("title"));
-	BOOST_REQUIRE(std::strncmp("hibernateTitle2",hibernateTitle2->getVal(),std::strlen("hibernateTitle2")) == 0);
-
-	CppHibernateCriteria criteria2 = session->createCriteria(obj);
-	CppHibernateJCollectionObject *res2 = criteria2.addGe("id",helper->createJLongObjectWith(2)).list();
-	CppHibernateJObject *element2 = NULL;
-	for(int i = 0;i < res2->size();i++) {
-		element2 = res2->get(i);
-		CppHibernateJLongObject *id = dynamic_cast<CppHibernateJLongObject *>(element2->getVal("id"));
-		long val = i + 2;
-		BOOST_REQUIRE(val == id->getVal());
-		std::stringstream ss;
-		ss << val;
-		std::string t("hibernateTitle");
-		t += ss.str();
-
-		CppHibernateJStringObject *sObj = dynamic_cast<CppHibernateJStringObject *>(element2->getVal("title"));
-		BOOST_REQUIRE(std::strncmp(t.c_str(),sObj->getVal(),std::strlen(t.c_str())) == 0);
-		delete sObj;
-		sObj = NULL;
-		delete id;
-		id = NULL;
-		delete element2;
-		element2 = NULL;
-	}
-
-	delete res2;
-	delete element;
-	delete hibernateTitle2;
-	delete res1;
-
-	CppHibernateCriteria criteria3 = session->createCriteria(obj);
-	CppHibernateJCollectionObject *res3 = criteria3.addGe("id",helper->createJLongObjectWith(2)).addOrderDesc("id").list();
-	BOOST_REQUIRE(res3->size() == 2);
-	CppHibernateJObject *element3 = NULL;
-	for(int i = 0; i < res3->size();i++) {
-		element3 = res3->get(i);
-		CppHibernateJLongObject *id = dynamic_cast<CppHibernateJLongObject *>(element3->getVal("id"));
-		long idVal = res3->size() - i + 1;
-		BOOST_REQUIRE(idVal == id->getVal());
-		std::stringstream ss;
-		ss << idVal;
-		std::string st("hibernateTitle");
-		st += ss.str();
-
-		CppHibernateJStringObject *sv = dynamic_cast<CppHibernateJStringObject *>(element3->getVal("title"));
-		BOOST_REQUIRE(std::strncmp(st.c_str(),sv->getVal(),std::strlen(st.c_str())) == 0);
-
-		delete sv;
-		sv = NULL;
-		delete id;
-		id = NULL;
-	}
-
-	delete res3;
-
-	CppHibernateCriteria criteria4 = session->createCriteria(obj);
-	CppHibernateJCollectionObject *res4 = criteria4.addBetween("id",helper->createJLongObjectWith(2),helper->createJLongObjectWith(3)).list();
-	BOOST_REQUIRE(res4->size() == 2);
-	delete res4;
-
-	CppHibernateCriteria criteria5 = session->createCriteria(obj);
-	CppHibernateJCollectionObject *res5 = criteria5.addGt("id",helper->createJLongObjectWith(2)).list();
-	BOOST_REQUIRE(res5->size() == 1);
-	delete res5;
-
-	CppHibernateCriteria criteria6 = session->createCriteria(obj);
-	CppHibernateJCollectionObject *res6 = criteria6.addIdEq(helper->createJLongObjectWith(3)).list();
-	BOOST_REQUIRE(res6->size() == 1);
-	CppHibernateJObject *el = res6->get(0);
-	CppHibernateJStringObject *elStr = dynamic_cast<CppHibernateJStringObject *>(el->getVal("title"));
-	BOOST_REQUIRE(std::strncmp("hibernateTitle3",elStr->getVal(),std::strlen("hibernateTitle3")) == 0);
-	delete elStr;
-	delete el;
-	delete res6;
-
-	CppHibernateCriteria criteria7 = session->createCriteria(obj);
-	CppHibernateJCollectionObject *res7 = criteria7.addIdEq(helper->createJLongObjectWith(6)).list();
-	BOOST_REQUIRE(res7->size() == 0);
-	BOOST_REQUIRE(res7->isEmpty() == true);
-	delete res7;
-
-	CppHibernateCriteria criteria8 = session->createCriteria(obj);
-	CppHibernateJCollectionObject *res8 = criteria8.addIlike("title",helper->createJStringObjectWith("title"),CppHibernateMatchMode::ANYWHERE).list();
-	BOOST_REQUIRE(res8->size() == 3);
-	delete res8;
-
-	CppHibernateCriteria criteria9 = session->createCriteria(obj);
-	CppHibernateJCollectionObject *res9 = criteria9.addIlike("title",helper->createJStringObjectWith("2"),CppHibernateMatchMode::END).list();
-	BOOST_REQUIRE(res9->size() == 1);
-	CppHibernateJObject *el2 = res9->get(0);
-	CppHibernateJStringObject *s2 = dynamic_cast<CppHibernateJStringObject *>(el2->getVal("title"));
-	BOOST_REQUIRE(std::strncmp("hibernateTitle2",s2->getVal(),std::strlen("hibernateTitle2")) == 0);
-	delete s2;
-	delete el2;
-	delete res9;
-
-	CppHibernateCriteria criteria10 = session->createCriteria(obj);
-	CppHibernateJCollectionObject *res10 = criteria10.addIlike("title",helper->createJStringObjectWith("hibernateTitle11"),CppHibernateMatchMode::EXACT).list();
-	BOOST_REQUIRE(res10->isEmpty() == true);
-	delete res10;
-
-	CppHibernateCriteria criteria11 = session->createCriteria(obj);
-	CppHibernateJCollectionObject *res11 = criteria11.addIlike("title",helper->createJStringObjectWith("hibernateTitle1"),CppHibernateMatchMode::EXACT).list();
-	BOOST_REQUIRE(res11->size() == 1);
-	delete res11;
-
-	CppHibernateCriteria criteria12 = session->createCriteria(obj);
-	CppHibernateJCollectionObject *res12 = criteria12.addIlike("title",helper->createJStringObjectWith("hibernate"),CppHibernateMatchMode::START).addOrderDesc("title").list();
-	CppHibernateJObject *e1 = res12->get(0);
-	CppHibernateJStringObject *e1Str = dynamic_cast<CppHibernateJStringObject *>(e1->getVal("title"));
-	BOOST_REQUIRE(std::strncmp("hibernateTitle3",e1Str->getVal(),std::strlen("hibernateTitle3")) == 0);
-	delete e1Str;
-	delete e1;
-	delete res12;
-
-	CppHibernateCriteria criteria13 = session->createCriteria(obj);
-	BOOST_REQUIRE_THROW(criteria13.addIlike("title",helper->createJStringObjectWith("hibernate"),"GOOGLE").list(),CppHibernateException);
-
-	CppHibernateCriteria criteria14 = session->createCriteria(obj);
-	std::deque<CppHibernateJObject *> objects;
-	objects.push_back(helper->createJStringObjectWith("google"));
-	objects.push_back(helper->createJStringObjectWith("yahoo"));
-	objects.push_back(helper->createJStringObjectWith("apple"));
-	CppHibernateJCollectionObject *res14 = criteria14.addIn("title",objects).list();
-	BOOST_REQUIRE(res14->isEmpty() == true);
-	BOOST_REQUIRE(objects.size() == 0);
-	delete res14;
-
-	CppHibernateCriteria criteria15 = session->createCriteria(obj);
-	objects.push_back(helper->createJLongObjectWith(6));
-	objects.push_back(helper->createJLongObjectWith(7));
-	objects.push_back(helper->createJLongObjectWith(2));
-	CppHibernateJCollectionObject *res15 = criteria15.addIn("id",objects).list();
-	BOOST_REQUIRE(res15->size() == 1);
-	CppHibernateJObject *o1 = res15->get(0);
-	CppHibernateJStringObject *o1Str = dynamic_cast<CppHibernateJStringObject *>(o1->getVal("title"));
-	BOOST_REQUIRE(std::strncmp("hibernateTitle2",o1Str->getVal(),std::strlen("hibernateTitle2")) == 0);
-	delete o1Str;
-	delete o1;
-	delete res15;
-
-	CppHibernateCriteria criteria16 = session->createCriteria(obj);
-	BOOST_REQUIRE_THROW(criteria16.addIn("title",objects).list(),CppHibernateException);
-
-	CppHibernateCriteria criteria17 = session->createCriteria(obj);
-	CppHibernateJCollectionObject *res17 = criteria17.addIsNotNULL("title").list();
-	BOOST_REQUIRE(res17->size() == 3);
-	delete res17;
-
-	CppHibernateCriteria criteria18 = session->createCriteria(obj);
-	CppHibernateJCollectionObject *res18 = criteria18.addIsNotNULL("date").list();
-	BOOST_REQUIRE(res18->isEmpty() == true);
-	delete res18;
-
-	CppHibernateCriteria criteria19 = session->createCriteria(obj);
-	CppHibernateJCollectionObject *res19 = criteria19.addIsNULL("date").list();
-	BOOST_REQUIRE(res19->size() == 3);
-	delete res19;
-
-	CppHibernateCriteria criteria20 = session->createCriteria(obj);
-	CppHibernateJCollectionObject *res20 = criteria20.addIsNULL("title").list();
-	BOOST_REQUIRE(res20->isEmpty() == true);
-	delete res20;
-
-	CppHibernateCriteria criteria21 = session->createCriteria(obj);
-	CppHibernateJCollectionObject *res21 = criteria21.addLe("id",helper->createJLongObjectWith(0)).list();
-	BOOST_REQUIRE(res21->isEmpty() == true);
-	delete res21;
-
-	CppHibernateCriteria criteria22 = session->createCriteria(obj);
-	CppHibernateJCollectionObject *res22 = criteria22.addLe("id",helper->createJLongObjectWith(100)).list();
-	BOOST_REQUIRE(res22->size() == 3);
-	delete res22;
-
-	CppHibernateCriteria criteria23 = session->createCriteria(obj);
-	CppHibernateJCollectionObject *res23 = criteria23.addLe("id",helper->createJLongObjectWith(4)).addIsNotNULL("title").addIlike("title",helper->createJStringObjectWith("2"),"END").addIdEq(helper->createJLongObjectWith(2)).list();
-	BOOST_REQUIRE(res23->size() == 1);
-	CppHibernateJObject *el23 = res23->get(0);
-	CppHibernateJStringObject *el23Str = dynamic_cast<CppHibernateJStringObject *>(el23->getVal("title"));
-	BOOST_REQUIRE(std::strncmp("hibernateTitle2",el23Str->getVal(),std::strlen("hibernateTitle2")) == 0);
-	delete el23Str;
-	delete el23;
-	delete res23;
-
-	CppHibernateCriteria criteria24 = session->createCriteria(obj);
-	CppHibernateJCollectionObject *res24 = criteria24.addLike("title",helper->createJStringObjectWith("Hibernate")).list();
-	BOOST_REQUIRE(res24->isEmpty() == true);
-	delete res24;
-
-	CppHibernateCriteria criteria25 = session->createCriteria(obj);
-	CppHibernateJCollectionObject *res25 = criteria25.addLike("title",helper->createJStringObjectWith("hibernate")).list();
-	BOOST_REQUIRE(res25->size() == 3);
-	delete res25;
-
-	CppHibernateCriteria criteria26 = session->createCriteria(obj);
-	CppHibernateJCollectionObject *res26 = criteria26.addLike("title",helper->createJStringObjectWith("Title"),"ANYWHERE").list();
-	BOOST_REQUIRE(res26->size() == 3);
-	delete res26;
-
-	CppHibernateCriteria criteria27 = session->createCriteria(obj);
-	CppHibernateJCollectionObject *res27 = criteria27.addLt("id",helper->createJLongObjectWith(2)).list();
-	BOOST_REQUIRE(res27->size() == 1);
-	CppHibernateJObject *obj27 = res27->get(0);
-	CppHibernateJStringObject *obj27Str = dynamic_cast<CppHibernateJStringObject *>(obj27->getVal("title"));
-	BOOST_REQUIRE(std::strncmp("hibernateTitle1",obj27Str->getVal(),std::strlen("hibernateTitle1")) == 0);
-	delete obj27Str;
-	delete obj27;
-	delete res27;
-
-	CppHibernateCriteria criteria28 = session->createCriteria(obj);
-	CppHibernateJCollectionObject *res28 = criteria28.addNe("title",helper->createJStringObjectWith("hibernateTitle1")).setCachable(true).setCacheRegion("org.hibernateDomain.Event").list();
-	BOOST_REQUIRE(res28->size() == 2);
-	delete res28;
-
-	CppHibernateSessionStatistics *sessionStatistics = NULL;
-	BOOST_REQUIRE_NO_THROW(sessionStatistics = session->getStatistics());
-	BOOST_REQUIRE(sessionStatistics != NULL);
-	int collectionCount = -1;
-	BOOST_REQUIRE_NO_THROW(collectionCount = sessionStatistics->getCollectionCount());
-	BOOST_REQUIRE(collectionCount == 0);
-	CppHibernateJCollectionObject *keys = NULL;
-	BOOST_REQUIRE_NO_THROW(keys = sessionStatistics->getCollectionKeys());
-	BOOST_TEST_MESSAGE(keys->toString());
-	BOOST_REQUIRE(keys->size() == 0);
-	BOOST_REQUIRE(keys->isEmpty() == true);
-	int count = -1;
-	BOOST_REQUIRE_NO_THROW(count = sessionStatistics->getEntityCount());
-	BOOST_REQUIRE(count == 3);
-	CppHibernateJCollectionObject *entityKeys = NULL;
-	BOOST_REQUIRE_NO_THROW(entityKeys = sessionStatistics->getEntityKeys());
-	BOOST_REQUIRE(entityKeys->size() == 3);
-	BOOST_TEST_MESSAGE(sessionStatistics->toString());
-	delete entityKeys;
-	delete keys;
-	delete sessionStatistics;
-
-	CppHibernateStatistics *st = NULL;
-	BOOST_REQUIRE_NO_THROW(st = hibernate->getSessionFactory()->getStatistics());
-	BOOST_REQUIRE(st != NULL);
-
-	long closeStatementCount = -1;
-	BOOST_REQUIRE_NO_THROW(closeStatementCount = st->getCloseStatementCount());
-	BOOST_TEST_MESSAGE("closeStatementCount is " << closeStatementCount);
-
-	long collectionFetchCount = -1;
-	BOOST_REQUIRE_NO_THROW(collectionFetchCount = st->getCollectionFetchCount());
-	BOOST_TEST_MESSAGE("collectionFetchCount is " << collectionFetchCount);
-
-	long collectionLoadCount = -1;
-	BOOST_REQUIRE_NO_THROW(collectionLoadCount = st->getCollectionLoadCount());
-	BOOST_TEST_MESSAGE("collectionLoadCount is: " << collectionLoadCount);
-
-	long collectionRecreateCount = -1;
-	BOOST_REQUIRE_NO_THROW(collectionRecreateCount = st->getCollectionRecreateCount());
-	BOOST_TEST_MESSAGE("collectionRecreateCount is: " << collectionRecreateCount);
-
-	long collectionRemoveCount = -1;
-	BOOST_REQUIRE_NO_THROW(collectionRemoveCount = st->getCollectionRemoveCount());
-	BOOST_TEST_MESSAGE("collectionRemoveCount is: " << collectionRemoveCount);
-
-	std::deque<std::string> roleNames;
-	BOOST_REQUIRE_NO_THROW(roleNames = st->getCollectionRoleNames());
-
-	CppHibernateCollectionStatistics *collectionStatistics = NULL;
-	BOOST_REQUIRE_NO_THROW(collectionStatistics = st->getCollectionStatistics(""));
-	delete collectionStatistics;
-
-	long updateCount = -1;
-	BOOST_REQUIRE_NO_THROW(updateCount = st->getCollectionUpdateCount());
-
-	long connectCount = -1;
-	BOOST_REQUIRE_NO_THROW(connectCount = st->getConnectCount());
-
-	long deleteEntityCount = -1;
-	BOOST_REQUIRE_NO_THROW(deleteEntityCount = st->getEntityDeleteCount());
-
-	long fetchEntityCount = -1;
-	BOOST_REQUIRE_NO_THROW(fetchEntityCount = st->getEntityFetchCount());
-
-	long insertEntityCount = -1;
-	BOOST_REQUIRE_NO_THROW(insertEntityCount = st->getEntityInsertCount());
-
-	long loadEntityCount = -1;
-	BOOST_REQUIRE_NO_THROW(loadEntityCount = st->getEntityLoadCount());
-
-	std::deque<std::string> entityNames;
-	BOOST_REQUIRE_NO_THROW(entityNames = st->getEntityNames());
-
-	std::cout << "toString: " << st->toString() << std::endl;
-
-	CppHibernateEntityStatistics *entityStatistics = NULL;
-	BOOST_REQUIRE_NO_THROW(entityStatistics = st->getEntityStatistics("org.hibernateDomain.Event"));
-	BOOST_REQUIRE(entityStatistics != NULL);
-	long entityDeleteCount = -1;
-	BOOST_REQUIRE_NO_THROW(entityDeleteCount = entityStatistics->getDeleteCount());
-	BOOST_TEST_MESSAGE("entity delete count: " << entityDeleteCount);
-	long entityFetchCount = -1;
-	BOOST_REQUIRE_NO_THROW(entityFetchCount = entityStatistics->getFetchCount());
-	BOOST_TEST_MESSAGE("entity fetch count: " << entityFetchCount);
-	long entityInsertCount = -1;
-	BOOST_REQUIRE_NO_THROW(entityInsertCount = entityStatistics->getInsertCount());
-	BOOST_TEST_MESSAGE("entity insert count: " << entityInsertCount);
-	BOOST_REQUIRE(entityInsertCount == 3);
-	long entityLoadCount = -1;
-	BOOST_REQUIRE_NO_THROW(entityLoadCount = entityStatistics->getLoadCount());
-	BOOST_TEST_MESSAGE("entity load count: " << entityLoadCount);
-	long entityOptimisticFailureCount = -1;
-	BOOST_REQUIRE_NO_THROW(entityOptimisticFailureCount = entityStatistics->getOptimisticFailureCount());
-	BOOST_TEST_MESSAGE("optimistic failure count: " << entityOptimisticFailureCount);
-	long entityUpdateCount = -1;
-	BOOST_REQUIRE_NO_THROW(entityUpdateCount = entityStatistics->getUpdateCount());
-	BOOST_TEST_MESSAGE("entity update count: " << entityUpdateCount);
-
-	long entityUpdateCountGlobal = -1;
-	BOOST_REQUIRE_NO_THROW(entityUpdateCountGlobal = st->getEntityUpdateCount());
-	BOOST_TEST_MESSAGE("global entity update count: " << entityUpdateCountGlobal);
-
-	long flushCount = -1;
-	BOOST_REQUIRE_NO_THROW(flushCount = st->getFlushCount());
-	BOOST_TEST_MESSAGE("flush count: " << flushCount);
-
-	long optimisticFailureCount = -1;
-	BOOST_REQUIRE_NO_THROW(optimisticFailureCount = st->getOptimisticFailureCount());
-	BOOST_TEST_MESSAGE("optimistic failure count: " << optimisticFailureCount);
-
-	long prepareStatementCount = -1;
-	BOOST_REQUIRE_NO_THROW(prepareStatementCount = st->getPrepareStatementCount());
-	BOOST_TEST_MESSAGE("prepare statement count: " << prepareStatementCount);
-
-	std::deque<std::string> queries;
-	BOOST_REQUIRE_NO_THROW(queries = st->getQueries());
-
-	long queryCacheHitCount = -1;
-	BOOST_REQUIRE_NO_THROW(queryCacheHitCount = st->getQueryCacheHitCount());
-	BOOST_TEST_MESSAGE("query cache hit count: " << queryCacheHitCount);
-
-	long queryCacheMissCount = -1;
-	BOOST_REQUIRE_NO_THROW(queryCacheMissCount = st->getQueryCacheMissCount());
-	BOOST_TEST_MESSAGE("query cache miss count: " << queryCacheMissCount);
-
-	long queryCachePutCount = -1;
-	BOOST_REQUIRE_NO_THROW(queryCachePutCount = st->getQueryCachePutCount());
-	BOOST_TEST_MESSAGE("query cache put count: " << queryCachePutCount);
-
-	long queryExecutionCount = -1;
-	BOOST_REQUIRE_NO_THROW(queryExecutionCount = st->getQueryExecutionCount());
-	BOOST_TEST_MESSAGE("query execution count: " << queryExecutionCount);
-
-	long queryExecutionMaxTime = -1;
-	BOOST_REQUIRE_NO_THROW(queryExecutionMaxTime = st->getQueryExecutionMaxTime());
-	BOOST_TEST_MESSAGE("query execution max time: " << queryExecutionMaxTime);
-
-	std::string queryName;
-	BOOST_REQUIRE_NO_THROW(queryName = st->getQueryExecutionMaxTimeQueryString());
-	BOOST_TEST_MESSAGE("query execution max time: " << queryName.c_str());
-
-	CppHibernateQueryStatistics *queryStatistics = NULL;
-	BOOST_REQUIRE_NO_THROW(queryStatistics = st->getQueryStatistics(""));
-	BOOST_REQUIRE(queryStatistics != NULL);
-	delete queryStatistics;
-
-	long secondLevelHitCount = -1;
-	BOOST_REQUIRE_NO_THROW(secondLevelHitCount = st->getSecondLevelCacheHitCount());
-	BOOST_TEST_MESSAGE("second level hit count: " << secondLevelHitCount);
-
-	long secondLevelMissCount = -1;
-	BOOST_REQUIRE_NO_THROW(secondLevelMissCount = st->getSecondLevelCacheMissCount());
-	BOOST_TEST_MESSAGE("second level miss count: " << secondLevelMissCount);
-
-	long secondLevelPutCount = -1;
-	BOOST_REQUIRE_NO_THROW(secondLevelPutCount = st->getSecondLevelCachePutCount());
-	BOOST_TEST_MESSAGE("second level put count: " << secondLevelPutCount);
-
-	std::deque<std::string> regionNames;
-	BOOST_REQUIRE_NO_THROW(regionNames = st->getSecondLevelCacheRegionNames());
-
-	CppHibernateSecondLevelCacheStatistics *secondLevelCacheStatistics = NULL;
-	BOOST_TEST_MESSAGE("is statistics enabled? : " << st->isStatisticsEnabled());
-	BOOST_REQUIRE_NO_THROW(secondLevelCacheStatistics = st->getSecondLevelCacheStatistics("org.hibernateDomain.Event"));
-	BOOST_TEST_MESSAGE("second level cache statistics: " << secondLevelCacheStatistics->toString());
-	delete secondLevelCacheStatistics;
-
-	long sessionCloseCount = -1;
-	BOOST_REQUIRE_NO_THROW(sessionCloseCount = st->getSessionCloseCount());
-	BOOST_TEST_MESSAGE("session close count: " << sessionCloseCount);
-
-	long sessionOpenCount = -1;
-	BOOST_REQUIRE_NO_THROW(sessionOpenCount = st->getSessionOpenCount());
-	BOOST_TEST_MESSAGE("session open count: " << sessionOpenCount);
-
-	long startTime = -1;
-	BOOST_REQUIRE_NO_THROW(startTime = st->getStartTime());
-	BOOST_TEST_MESSAGE("start time: " << startTime);
-
-	long successfulTransactionCount = -1;
-	BOOST_REQUIRE_NO_THROW(successfulTransactionCount = st->getSuccessfulTransactionCount());
-	BOOST_TEST_MESSAGE("successful transaction count: " << successfulTransactionCount);
-
-	long transactionCount = -1;
-	BOOST_REQUIRE_NO_THROW(transactionCount = st->getTransactionCount());
-	BOOST_TEST_MESSAGE("transaction count: " << transactionCount);
-
-	bool isEnabled = false;
-	BOOST_REQUIRE_NO_THROW(isEnabled = st->isStatisticsEnabled());
-	BOOST_REQUIRE(isEnabled == true);
-
-	BOOST_REQUIRE_NO_THROW(st->clear());
-	delete st;
-
-	//// delete domain objects
-	session->deleteObj(obj);
-	session->deleteObj(obj2);
-	session->deleteObj(obj3);
-
-	//// commit the transaction
-	BOOST_REQUIRE_NO_THROW(transaction->commit());
-	BOOST_REQUIRE(transaction != NULL);
-
-	delete helper;
-	delete transaction;
-	delete session;
-	delete loader;
-	delete hibernate;
+//	CppHibernateJVMConfiguration configuration(ROOT_CLASS_PATH);
+//	AbstractClassLoader *loader = new URLClassLoader(configuration.getJNIEnv(),HIBERNATE_LIB_LOCATION);
+//	CppHibernateObjectHelper *helper = new CppHibernateObjectHelper(configuration.getJNIEnv(),loader);
+//	CppHibernate *hibernate = new CppHibernate(&configuration,loader);
+//	CppHibernateSession *session = NULL;
+//	CppHibernateTransaction *transaction = NULL;
+//
+//	session = hibernate->getSessionFactory()->openSession();
+//	BOOST_REQUIRE_NO_THROW(transaction = session->beginTransaction());
+//
+//	//// creates domain objects
+//	CppHibernateJObject *obj = helper->createJObjectWith("org.hibernateDomain.Event");
+//	CppHibernateJStringObject *title = helper->createJStringObjectWith("hibernateTitle1");
+//	obj->setVal("title",title);
+//
+//	CppHibernateJObject *obj2 = helper->createJObjectWith("org.hibernateDomain.Event");
+//	CppHibernateJStringObject *title2 = helper->createJStringObjectWith("hibernateTitle2");
+//	obj2->setVal("title",title2);
+//
+//	CppHibernateJObject *obj3 = helper->createJObjectWith("org.hibernateDomain.Event");
+//	CppHibernateJStringObject *title3 = helper->createJStringObjectWith("hibernateTitle3");
+//	obj3->setVal("title",title3);
+//
+//	//// save domain objects
+//	session->saveObj(obj);
+//	session->saveObj(obj2);
+//	session->saveObj(obj3);
+//
+//	CppHibernateJCollectionObject *res1 = NULL;
+//	CppHibernateCriteria criteria = session->createCriteria(obj);
+//	criteria.addEq("title",helper->createJStringObjectWith("hibernateTitle2"));
+//	res1 = criteria.list();
+//	BOOST_REQUIRE(res1->size() == 1);
+//	CppHibernateJObject *element = res1->get(0);
+//	CppHibernateJStringObject *hibernateTitle2 = dynamic_cast<CppHibernateJStringObject *>(element->getVal("title"));
+//	BOOST_REQUIRE(std::strncmp("hibernateTitle2",hibernateTitle2->getVal(),std::strlen("hibernateTitle2")) == 0);
+//
+//	CppHibernateCriteria criteria2 = session->createCriteria(obj);
+//	CppHibernateJCollectionObject *res2 = criteria2.addGe("id",helper->createJLongObjectWith(2)).list();
+//	CppHibernateJObject *element2 = NULL;
+//	for(int i = 0;i < res2->size();i++) {
+//		element2 = res2->get(i);
+//		CppHibernateJLongObject *id = dynamic_cast<CppHibernateJLongObject *>(element2->getVal("id"));
+//		long val = i + 2;
+//		BOOST_REQUIRE(val == id->getVal());
+//		std::stringstream ss;
+//		ss << val;
+//		std::string t("hibernateTitle");
+//		t += ss.str();
+//
+//		CppHibernateJStringObject *sObj = dynamic_cast<CppHibernateJStringObject *>(element2->getVal("title"));
+//		BOOST_REQUIRE(std::strncmp(t.c_str(),sObj->getVal(),std::strlen(t.c_str())) == 0);
+//		delete sObj;
+//		sObj = NULL;
+//		delete id;
+//		id = NULL;
+//		delete element2;
+//		element2 = NULL;
+//	}
+//
+//	delete res2;
+//	delete element;
+//	delete hibernateTitle2;
+//	delete res1;
+//
+//	CppHibernateCriteria criteria3 = session->createCriteria(obj);
+//	CppHibernateJCollectionObject *res3 = criteria3.addGe("id",helper->createJLongObjectWith(2)).addOrderDesc("id").list();
+//	BOOST_REQUIRE(res3->size() == 2);
+//	CppHibernateJObject *element3 = NULL;
+//	for(int i = 0; i < res3->size();i++) {
+//		element3 = res3->get(i);
+//		CppHibernateJLongObject *id = dynamic_cast<CppHibernateJLongObject *>(element3->getVal("id"));
+//		long idVal = res3->size() - i + 1;
+//		BOOST_REQUIRE(idVal == id->getVal());
+//		std::stringstream ss;
+//		ss << idVal;
+//		std::string st("hibernateTitle");
+//		st += ss.str();
+//
+//		CppHibernateJStringObject *sv = dynamic_cast<CppHibernateJStringObject *>(element3->getVal("title"));
+//		BOOST_REQUIRE(std::strncmp(st.c_str(),sv->getVal(),std::strlen(st.c_str())) == 0);
+//
+//		delete sv;
+//		sv = NULL;
+//		delete id;
+//		id = NULL;
+//	}
+//
+//	delete res3;
+//
+//	CppHibernateCriteria criteria4 = session->createCriteria(obj);
+//	CppHibernateJCollectionObject *res4 = criteria4.addBetween("id",helper->createJLongObjectWith(2),helper->createJLongObjectWith(3)).list();
+//	BOOST_REQUIRE(res4->size() == 2);
+//	delete res4;
+//
+//	CppHibernateCriteria criteria5 = session->createCriteria(obj);
+//	CppHibernateJCollectionObject *res5 = criteria5.addGt("id",helper->createJLongObjectWith(2)).list();
+//	BOOST_REQUIRE(res5->size() == 1);
+//	delete res5;
+//
+//	CppHibernateCriteria criteria6 = session->createCriteria(obj);
+//	CppHibernateJCollectionObject *res6 = criteria6.addIdEq(helper->createJLongObjectWith(3)).list();
+//	BOOST_REQUIRE(res6->size() == 1);
+//	CppHibernateJObject *el = res6->get(0);
+//	CppHibernateJStringObject *elStr = dynamic_cast<CppHibernateJStringObject *>(el->getVal("title"));
+//	BOOST_REQUIRE(std::strncmp("hibernateTitle3",elStr->getVal(),std::strlen("hibernateTitle3")) == 0);
+//	delete elStr;
+//	delete el;
+//	delete res6;
+//
+//	CppHibernateCriteria criteria7 = session->createCriteria(obj);
+//	CppHibernateJCollectionObject *res7 = criteria7.addIdEq(helper->createJLongObjectWith(6)).list();
+//	BOOST_REQUIRE(res7->size() == 0);
+//	BOOST_REQUIRE(res7->isEmpty() == true);
+//	delete res7;
+//
+//	CppHibernateCriteria criteria8 = session->createCriteria(obj);
+//	CppHibernateJCollectionObject *res8 = criteria8.addIlike("title",helper->createJStringObjectWith("title"),CppHibernateMatchMode::ANYWHERE).list();
+//	BOOST_REQUIRE(res8->size() == 3);
+//	delete res8;
+//
+//	CppHibernateCriteria criteria9 = session->createCriteria(obj);
+//	CppHibernateJCollectionObject *res9 = criteria9.addIlike("title",helper->createJStringObjectWith("2"),CppHibernateMatchMode::END).list();
+//	BOOST_REQUIRE(res9->size() == 1);
+//	CppHibernateJObject *el2 = res9->get(0);
+//	CppHibernateJStringObject *s2 = dynamic_cast<CppHibernateJStringObject *>(el2->getVal("title"));
+//	BOOST_REQUIRE(std::strncmp("hibernateTitle2",s2->getVal(),std::strlen("hibernateTitle2")) == 0);
+//	delete s2;
+//	delete el2;
+//	delete res9;
+//
+//	CppHibernateCriteria criteria10 = session->createCriteria(obj);
+//	CppHibernateJCollectionObject *res10 = criteria10.addIlike("title",helper->createJStringObjectWith("hibernateTitle11"),CppHibernateMatchMode::EXACT).list();
+//	BOOST_REQUIRE(res10->isEmpty() == true);
+//	delete res10;
+//
+//	CppHibernateCriteria criteria11 = session->createCriteria(obj);
+//	CppHibernateJCollectionObject *res11 = criteria11.addIlike("title",helper->createJStringObjectWith("hibernateTitle1"),CppHibernateMatchMode::EXACT).list();
+//	BOOST_REQUIRE(res11->size() == 1);
+//	delete res11;
+//
+//	CppHibernateCriteria criteria12 = session->createCriteria(obj);
+//	CppHibernateJCollectionObject *res12 = criteria12.addIlike("title",helper->createJStringObjectWith("hibernate"),CppHibernateMatchMode::START).addOrderDesc("title").list();
+//	CppHibernateJObject *e1 = res12->get(0);
+//	CppHibernateJStringObject *e1Str = dynamic_cast<CppHibernateJStringObject *>(e1->getVal("title"));
+//	BOOST_REQUIRE(std::strncmp("hibernateTitle3",e1Str->getVal(),std::strlen("hibernateTitle3")) == 0);
+//	delete e1Str;
+//	delete e1;
+//	delete res12;
+//
+//	CppHibernateCriteria criteria13 = session->createCriteria(obj);
+//	BOOST_REQUIRE_THROW(criteria13.addIlike("title",helper->createJStringObjectWith("hibernate"),"GOOGLE").list(),CppHibernateException);
+//
+//	CppHibernateCriteria criteria14 = session->createCriteria(obj);
+//	std::deque<CppHibernateJObject *> objects;
+//	objects.push_back(helper->createJStringObjectWith("google"));
+//	objects.push_back(helper->createJStringObjectWith("yahoo"));
+//	objects.push_back(helper->createJStringObjectWith("apple"));
+//	CppHibernateJCollectionObject *res14 = criteria14.addIn("title",objects).list();
+//	BOOST_REQUIRE(res14->isEmpty() == true);
+//	BOOST_REQUIRE(objects.size() == 0);
+//	delete res14;
+//
+//	CppHibernateCriteria criteria15 = session->createCriteria(obj);
+//	objects.push_back(helper->createJLongObjectWith(6));
+//	objects.push_back(helper->createJLongObjectWith(7));
+//	objects.push_back(helper->createJLongObjectWith(2));
+//	CppHibernateJCollectionObject *res15 = criteria15.addIn("id",objects).list();
+//	BOOST_REQUIRE(res15->size() == 1);
+//	CppHibernateJObject *o1 = res15->get(0);
+//	CppHibernateJStringObject *o1Str = dynamic_cast<CppHibernateJStringObject *>(o1->getVal("title"));
+//	BOOST_REQUIRE(std::strncmp("hibernateTitle2",o1Str->getVal(),std::strlen("hibernateTitle2")) == 0);
+//	delete o1Str;
+//	delete o1;
+//	delete res15;
+//
+//	CppHibernateCriteria criteria16 = session->createCriteria(obj);
+//	BOOST_REQUIRE_THROW(criteria16.addIn("title",objects).list(),CppHibernateException);
+//
+//	CppHibernateCriteria criteria17 = session->createCriteria(obj);
+//	CppHibernateJCollectionObject *res17 = criteria17.addIsNotNULL("title").list();
+//	BOOST_REQUIRE(res17->size() == 3);
+//	delete res17;
+//
+//	CppHibernateCriteria criteria18 = session->createCriteria(obj);
+//	CppHibernateJCollectionObject *res18 = criteria18.addIsNotNULL("date").list();
+//	BOOST_REQUIRE(res18->isEmpty() == true);
+//	delete res18;
+//
+//	CppHibernateCriteria criteria19 = session->createCriteria(obj);
+//	CppHibernateJCollectionObject *res19 = criteria19.addIsNULL("date").list();
+//	BOOST_REQUIRE(res19->size() == 3);
+//	delete res19;
+//
+//	CppHibernateCriteria criteria20 = session->createCriteria(obj);
+//	CppHibernateJCollectionObject *res20 = criteria20.addIsNULL("title").list();
+//	BOOST_REQUIRE(res20->isEmpty() == true);
+//	delete res20;
+//
+//	CppHibernateCriteria criteria21 = session->createCriteria(obj);
+//	CppHibernateJCollectionObject *res21 = criteria21.addLe("id",helper->createJLongObjectWith(0)).list();
+//	BOOST_REQUIRE(res21->isEmpty() == true);
+//	delete res21;
+//
+//	CppHibernateCriteria criteria22 = session->createCriteria(obj);
+//	CppHibernateJCollectionObject *res22 = criteria22.addLe("id",helper->createJLongObjectWith(100)).list();
+//	BOOST_REQUIRE(res22->size() == 3);
+//	delete res22;
+//
+//	CppHibernateCriteria criteria23 = session->createCriteria(obj);
+//	CppHibernateJCollectionObject *res23 = criteria23.addLe("id",helper->createJLongObjectWith(4)).addIsNotNULL("title").addIlike("title",helper->createJStringObjectWith("2"),CppHibernateMatchMode::END).addIdEq(helper->createJLongObjectWith(2)).list();
+//	BOOST_REQUIRE(res23->size() == 1);
+//	CppHibernateJObject *el23 = res23->get(0);
+//	CppHibernateJStringObject *el23Str = dynamic_cast<CppHibernateJStringObject *>(el23->getVal("title"));
+//	BOOST_REQUIRE(std::strncmp("hibernateTitle2",el23Str->getVal(),std::strlen("hibernateTitle2")) == 0);
+//	delete el23Str;
+//	delete el23;
+//	delete res23;
+//
+//	CppHibernateCriteria criteria24 = session->createCriteria(obj);
+//	CppHibernateJCollectionObject *res24 = criteria24.addLike("title",helper->createJStringObjectWith("Hibernate")).list();
+//	BOOST_REQUIRE(res24->isEmpty() == true);
+//	delete res24;
+//
+//	CppHibernateCriteria criteria25 = session->createCriteria(obj);
+//	CppHibernateJCollectionObject *res25 = criteria25.addLike("title",helper->createJStringObjectWith("hibernate")).list();
+//	BOOST_REQUIRE(res25->size() == 3);
+//	delete res25;
+//
+//	CppHibernateCriteria criteria26 = session->createCriteria(obj);
+//	CppHibernateJCollectionObject *res26 = criteria26.addLike("title",helper->createJStringObjectWith("Title"),CppHibernateMatchMode::ANYWHERE).list();
+//	BOOST_REQUIRE(res26->size() == 3);
+//	delete res26;
+//
+//	CppHibernateCriteria criteria27 = session->createCriteria(obj);
+//	CppHibernateJCollectionObject *res27 = criteria27.addLt("id",helper->createJLongObjectWith(2)).list();
+//	BOOST_REQUIRE(res27->size() == 1);
+//	CppHibernateJObject *obj27 = res27->get(0);
+//	CppHibernateJStringObject *obj27Str = dynamic_cast<CppHibernateJStringObject *>(obj27->getVal("title"));
+//	BOOST_REQUIRE(std::strncmp("hibernateTitle1",obj27Str->getVal(),std::strlen("hibernateTitle1")) == 0);
+//	delete obj27Str;
+//	delete obj27;
+//	delete res27;
+//
+//	CppHibernateCriteria criteria28 = session->createCriteria(obj);
+//	CppHibernateJCollectionObject *res28 = criteria28.addNe("title",helper->createJStringObjectWith("hibernateTitle1")).setCachable(true).setCacheRegion("org.hibernateDomain.Event").list();
+//	BOOST_REQUIRE(res28->size() == 2);
+//	delete res28;
+//
+//	CppHibernateSessionStatistics *sessionStatistics = NULL;
+//	BOOST_REQUIRE_NO_THROW(sessionStatistics = session->getStatistics());
+//	BOOST_REQUIRE(sessionStatistics != NULL);
+//	int collectionCount = -1;
+//	BOOST_REQUIRE_NO_THROW(collectionCount = sessionStatistics->getCollectionCount());
+//	BOOST_REQUIRE(collectionCount == 0);
+//	CppHibernateJCollectionObject *keys = NULL;
+//	BOOST_REQUIRE_NO_THROW(keys = sessionStatistics->getCollectionKeys());
+//	BOOST_TEST_MESSAGE(keys->toString());
+//	BOOST_REQUIRE(keys->size() == 0);
+//	BOOST_REQUIRE(keys->isEmpty() == true);
+//	int count = -1;
+//	BOOST_REQUIRE_NO_THROW(count = sessionStatistics->getEntityCount());
+//	BOOST_REQUIRE(count == 3);
+//	CppHibernateJCollectionObject *entityKeys = NULL;
+//	BOOST_REQUIRE_NO_THROW(entityKeys = sessionStatistics->getEntityKeys());
+//	BOOST_REQUIRE(entityKeys->size() == 3);
+//	BOOST_TEST_MESSAGE(sessionStatistics->toString());
+//	delete entityKeys;
+//	delete keys;
+//	delete sessionStatistics;
+//
+//	CppHibernateStatistics *st = NULL;
+//	BOOST_REQUIRE_NO_THROW(st = hibernate->getSessionFactory()->getStatistics());
+//	BOOST_REQUIRE(st != NULL);
+//
+//	long closeStatementCount = -1;
+//	BOOST_REQUIRE_NO_THROW(closeStatementCount = st->getCloseStatementCount());
+//	BOOST_TEST_MESSAGE("closeStatementCount is " << closeStatementCount);
+//
+//	long collectionFetchCount = -1;
+//	BOOST_REQUIRE_NO_THROW(collectionFetchCount = st->getCollectionFetchCount());
+//	BOOST_TEST_MESSAGE("collectionFetchCount is " << collectionFetchCount);
+//
+//	long collectionLoadCount = -1;
+//	BOOST_REQUIRE_NO_THROW(collectionLoadCount = st->getCollectionLoadCount());
+//	BOOST_TEST_MESSAGE("collectionLoadCount is: " << collectionLoadCount);
+//
+//	long collectionRecreateCount = -1;
+//	BOOST_REQUIRE_NO_THROW(collectionRecreateCount = st->getCollectionRecreateCount());
+//	BOOST_TEST_MESSAGE("collectionRecreateCount is: " << collectionRecreateCount);
+//
+//	long collectionRemoveCount = -1;
+//	BOOST_REQUIRE_NO_THROW(collectionRemoveCount = st->getCollectionRemoveCount());
+//	BOOST_TEST_MESSAGE("collectionRemoveCount is: " << collectionRemoveCount);
+//
+//	std::deque<std::string> roleNames;
+//	BOOST_REQUIRE_NO_THROW(roleNames = st->getCollectionRoleNames());
+//
+//	CppHibernateCollectionStatistics *collectionStatistics = NULL;
+//	BOOST_REQUIRE_NO_THROW(collectionStatistics = st->getCollectionStatistics(""));
+//	delete collectionStatistics;
+//
+//	long updateCount = -1;
+//	BOOST_REQUIRE_NO_THROW(updateCount = st->getCollectionUpdateCount());
+//
+//	long connectCount = -1;
+//	BOOST_REQUIRE_NO_THROW(connectCount = st->getConnectCount());
+//
+//	long deleteEntityCount = -1;
+//	BOOST_REQUIRE_NO_THROW(deleteEntityCount = st->getEntityDeleteCount());
+//
+//	long fetchEntityCount = -1;
+//	BOOST_REQUIRE_NO_THROW(fetchEntityCount = st->getEntityFetchCount());
+//
+//	long insertEntityCount = -1;
+//	BOOST_REQUIRE_NO_THROW(insertEntityCount = st->getEntityInsertCount());
+//
+//	long loadEntityCount = -1;
+//	BOOST_REQUIRE_NO_THROW(loadEntityCount = st->getEntityLoadCount());
+//
+//	std::deque<std::string> entityNames;
+//	BOOST_REQUIRE_NO_THROW(entityNames = st->getEntityNames());
+//
+//	std::cout << "toString: " << st->toString() << std::endl;
+//
+//	CppHibernateEntityStatistics *entityStatistics = NULL;
+//	BOOST_REQUIRE_NO_THROW(entityStatistics = st->getEntityStatistics("org.hibernateDomain.Event"));
+//	BOOST_REQUIRE(entityStatistics != NULL);
+//	long entityDeleteCount = -1;
+//	BOOST_REQUIRE_NO_THROW(entityDeleteCount = entityStatistics->getDeleteCount());
+//	BOOST_TEST_MESSAGE("entity delete count: " << entityDeleteCount);
+//	long entityFetchCount = -1;
+//	BOOST_REQUIRE_NO_THROW(entityFetchCount = entityStatistics->getFetchCount());
+//	BOOST_TEST_MESSAGE("entity fetch count: " << entityFetchCount);
+//	long entityInsertCount = -1;
+//	BOOST_REQUIRE_NO_THROW(entityInsertCount = entityStatistics->getInsertCount());
+//	BOOST_TEST_MESSAGE("entity insert count: " << entityInsertCount);
+//	BOOST_REQUIRE(entityInsertCount == 3);
+//	long entityLoadCount = -1;
+//	BOOST_REQUIRE_NO_THROW(entityLoadCount = entityStatistics->getLoadCount());
+//	BOOST_TEST_MESSAGE("entity load count: " << entityLoadCount);
+//	long entityOptimisticFailureCount = -1;
+//	BOOST_REQUIRE_NO_THROW(entityOptimisticFailureCount = entityStatistics->getOptimisticFailureCount());
+//	BOOST_TEST_MESSAGE("optimistic failure count: " << entityOptimisticFailureCount);
+//	long entityUpdateCount = -1;
+//	BOOST_REQUIRE_NO_THROW(entityUpdateCount = entityStatistics->getUpdateCount());
+//	BOOST_TEST_MESSAGE("entity update count: " << entityUpdateCount);
+//
+//	long entityUpdateCountGlobal = -1;
+//	BOOST_REQUIRE_NO_THROW(entityUpdateCountGlobal = st->getEntityUpdateCount());
+//	BOOST_TEST_MESSAGE("global entity update count: " << entityUpdateCountGlobal);
+//
+//	long flushCount = -1;
+//	BOOST_REQUIRE_NO_THROW(flushCount = st->getFlushCount());
+//	BOOST_TEST_MESSAGE("flush count: " << flushCount);
+//
+//	long optimisticFailureCount = -1;
+//	BOOST_REQUIRE_NO_THROW(optimisticFailureCount = st->getOptimisticFailureCount());
+//	BOOST_TEST_MESSAGE("optimistic failure count: " << optimisticFailureCount);
+//
+//	long prepareStatementCount = -1;
+//	BOOST_REQUIRE_NO_THROW(prepareStatementCount = st->getPrepareStatementCount());
+//	BOOST_TEST_MESSAGE("prepare statement count: " << prepareStatementCount);
+//
+//	std::deque<std::string> queries;
+//	BOOST_REQUIRE_NO_THROW(queries = st->getQueries());
+//
+//	long queryCacheHitCount = -1;
+//	BOOST_REQUIRE_NO_THROW(queryCacheHitCount = st->getQueryCacheHitCount());
+//	BOOST_TEST_MESSAGE("query cache hit count: " << queryCacheHitCount);
+//
+//	long queryCacheMissCount = -1;
+//	BOOST_REQUIRE_NO_THROW(queryCacheMissCount = st->getQueryCacheMissCount());
+//	BOOST_TEST_MESSAGE("query cache miss count: " << queryCacheMissCount);
+//
+//	long queryCachePutCount = -1;
+//	BOOST_REQUIRE_NO_THROW(queryCachePutCount = st->getQueryCachePutCount());
+//	BOOST_TEST_MESSAGE("query cache put count: " << queryCachePutCount);
+//
+//	long queryExecutionCount = -1;
+//	BOOST_REQUIRE_NO_THROW(queryExecutionCount = st->getQueryExecutionCount());
+//	BOOST_TEST_MESSAGE("query execution count: " << queryExecutionCount);
+//
+//	long queryExecutionMaxTime = -1;
+//	BOOST_REQUIRE_NO_THROW(queryExecutionMaxTime = st->getQueryExecutionMaxTime());
+//	BOOST_TEST_MESSAGE("query execution max time: " << queryExecutionMaxTime);
+//
+//	std::string queryName;
+//	BOOST_REQUIRE_NO_THROW(queryName = st->getQueryExecutionMaxTimeQueryString());
+//	BOOST_TEST_MESSAGE("query execution max time: " << queryName.c_str());
+//
+//	CppHibernateQueryStatistics *queryStatistics = NULL;
+//	BOOST_REQUIRE_NO_THROW(queryStatistics = st->getQueryStatistics(""));
+//	BOOST_REQUIRE(queryStatistics != NULL);
+//	delete queryStatistics;
+//
+//	long secondLevelHitCount = -1;
+//	BOOST_REQUIRE_NO_THROW(secondLevelHitCount = st->getSecondLevelCacheHitCount());
+//	BOOST_TEST_MESSAGE("second level hit count: " << secondLevelHitCount);
+//
+//	long secondLevelMissCount = -1;
+//	BOOST_REQUIRE_NO_THROW(secondLevelMissCount = st->getSecondLevelCacheMissCount());
+//	BOOST_TEST_MESSAGE("second level miss count: " << secondLevelMissCount);
+//
+//	long secondLevelPutCount = -1;
+//	BOOST_REQUIRE_NO_THROW(secondLevelPutCount = st->getSecondLevelCachePutCount());
+//	BOOST_TEST_MESSAGE("second level put count: " << secondLevelPutCount);
+//
+//	std::deque<std::string> regionNames;
+//	BOOST_REQUIRE_NO_THROW(regionNames = st->getSecondLevelCacheRegionNames());
+//
+//	CppHibernateSecondLevelCacheStatistics *secondLevelCacheStatistics = NULL;
+//	BOOST_TEST_MESSAGE("is statistics enabled? : " << st->isStatisticsEnabled());
+//	BOOST_REQUIRE_NO_THROW(secondLevelCacheStatistics = st->getSecondLevelCacheStatistics("org.hibernateDomain.Event"));
+//	BOOST_TEST_MESSAGE("second level cache statistics: " << secondLevelCacheStatistics->toString());
+//	delete secondLevelCacheStatistics;
+//
+//	long sessionCloseCount = -1;
+//	BOOST_REQUIRE_NO_THROW(sessionCloseCount = st->getSessionCloseCount());
+//	BOOST_TEST_MESSAGE("session close count: " << sessionCloseCount);
+//
+//	long sessionOpenCount = -1;
+//	BOOST_REQUIRE_NO_THROW(sessionOpenCount = st->getSessionOpenCount());
+//	BOOST_TEST_MESSAGE("session open count: " << sessionOpenCount);
+//
+//	long startTime = -1;
+//	BOOST_REQUIRE_NO_THROW(startTime = st->getStartTime());
+//	BOOST_TEST_MESSAGE("start time: " << startTime);
+//
+//	long successfulTransactionCount = -1;
+//	BOOST_REQUIRE_NO_THROW(successfulTransactionCount = st->getSuccessfulTransactionCount());
+//	BOOST_TEST_MESSAGE("successful transaction count: " << successfulTransactionCount);
+//
+//	long transactionCount = -1;
+//	BOOST_REQUIRE_NO_THROW(transactionCount = st->getTransactionCount());
+//	BOOST_TEST_MESSAGE("transaction count: " << transactionCount);
+//
+//	bool isEnabled = false;
+//	BOOST_REQUIRE_NO_THROW(isEnabled = st->isStatisticsEnabled());
+//	BOOST_REQUIRE(isEnabled == true);
+//
+//	BOOST_REQUIRE_NO_THROW(st->clear());
+//	delete st;
+//
+//	//// delete domain objects
+//	session->deleteObj(obj);
+//	session->deleteObj(obj2);
+//	session->deleteObj(obj3);
+//
+//	//// commit the transaction
+//	BOOST_REQUIRE_NO_THROW(transaction->commit());
+//	BOOST_REQUIRE(transaction != NULL);
+//
+//	delete helper;
+//	delete transaction;
+//	delete session;
+//	delete loader;
+//	delete hibernate;
 }
 
 BOOST_AUTO_TEST_CASE(testCppHibernateQuery) {
@@ -1961,45 +1961,45 @@ BOOST_AUTO_TEST_CASE(testForSample) {
 
 BOOST_AUTO_TEST_CASE(testCppHibernateSecondLevelCache) {
 
-//	CppHibernateJVMConfiguration configuration(ROOT_CLASS_PATH);
-//	URLClassLoader loader = URLClassLoader(configuration.getJNIEnv(),HIBERNATE_LIB_LOCATION);
-//	CppHibernateObjectHelper helper = CppHibernateObjectHelper(configuration.getJNIEnv(),&loader);
-//	CppHibernate hibernate = CppHibernate(&configuration,&loader);
-//
-//	CppHibernateSession *session = hibernate.getSessionFactory()->getCurrentSession();
-//	CppHibernateTransaction *transaction = session->beginTransaction();
-//
-//	CppHibernateJObject *obj1 = helper.createJObjectWith("org.hibernateDomain.Event");
-//	CppHibernateJStringObject *obj1Str = helper.createJStringObjectWith("title1");
-//	obj1->setVal("title",obj1Str);
-//	session->saveObj(obj1);
-//
-//	CppHibernateCriteria criteria = session->createCriteria(obj1);
-//	CppHibernateJCollectionObject *res = criteria.addLe("id",helper.createJLongObjectWith(4)).addIsNotNULL("title").addIlike("title",helper.createJStringObjectWith("1"),"END").addIdEq(helper.createJLongObjectWith(1)).list();
-//	BOOST_REQUIRE(res->size() == 1);
-//
-//	CppHibernateQuery query = session->createQuery("from Event event where event.id > :i and event.title = :t");
-//	CppHibernateJCollectionObject *res2 = query.setParameter(helper.createJStringObjectWith("i"),helper.createJLongObjectWith(0)).setParameter(helper.createJStringObjectWith("t"),helper.createJStringObjectWith("title1")).setCacheable(true).setCacheRegion("org.hibernateDomain.Event").list();
-//	BOOST_REQUIRE(res2->size() == 1);
-//	transaction->commit();
-//
-//	delete res;
-//	delete res2;
-//	delete obj1;
-//	delete obj1Str;
-//	delete transaction;
-//	delete session;
-//
-//	CppHibernateStatistics *statistics = hibernate.getSessionFactory()->getStatistics();
-//	BOOST_TEST_MESSAGE("statistics: " << statistics->toString());
-//	CppHibernateSecondLevelCacheStatistics *secondLevelCacheStatistics = statistics->getSecondLevelCacheStatistics("org.hibernateDomain.Event");
-//	if(secondLevelCacheStatistics != NULL) {
-//		BOOST_TEST_MESSAGE("second level cache statistics: " << secondLevelCacheStatistics->toString());
-//		delete secondLevelCacheStatistics;
-//	} else {
-//		BOOST_TEST_MESSAGE("second level cache statistics is not available");
-//	}
-//	delete statistics;
+	CppHibernateJVMConfiguration configuration(ROOT_CLASS_PATH);
+	URLClassLoader loader = URLClassLoader(configuration.getJNIEnv(),HIBERNATE_LIB_LOCATION);
+	CppHibernateObjectHelper helper = CppHibernateObjectHelper(configuration.getJNIEnv(),&loader);
+	CppHibernate hibernate = CppHibernate(&configuration,&loader);
+
+	CppHibernateSession *session = hibernate.getSessionFactory()->getCurrentSession();
+	CppHibernateTransaction *transaction = session->beginTransaction();
+
+	CppHibernateJObject *obj1 = helper.createJObjectWith("org.hibernateDomain.Event");
+	CppHibernateJStringObject *obj1Str = helper.createJStringObjectWith("title1");
+	obj1->setVal("title",obj1Str);
+	session->saveObj(obj1);
+
+	CppHibernateCriteria criteria = session->createCriteria(obj1);
+	CppHibernateJCollectionObject *res = criteria.addLe("id",helper.createJLongObjectWith(4)).addIsNotNULL("title").addIlike("title",helper.createJStringObjectWith("1"),"END").addIdEq(helper.createJLongObjectWith(1)).list();
+	BOOST_REQUIRE(res->size() == 1);
+
+	CppHibernateQuery query = session->createQuery("from Event event where event.id > :i and event.title = :t");
+	CppHibernateJCollectionObject *res2 = query.setParameter(helper.createJStringObjectWith("i"),helper.createJLongObjectWith(0)).setParameter(helper.createJStringObjectWith("t"),helper.createJStringObjectWith("title1")).setCacheable(true).setCacheRegion("org.hibernateDomain.Event").list();
+	BOOST_REQUIRE(res2->size() == 1);
+	transaction->commit();
+
+	delete res;
+	delete res2;
+	delete obj1;
+	delete obj1Str;
+	delete transaction;
+	delete session;
+
+	CppHibernateStatistics *statistics = hibernate.getSessionFactory()->getStatistics();
+	BOOST_TEST_MESSAGE("statistics: " << statistics->toString());
+	CppHibernateSecondLevelCacheStatistics *secondLevelCacheStatistics = statistics->getSecondLevelCacheStatistics("org.hibernateDomain.Event");
+	if(secondLevelCacheStatistics != NULL) {
+		BOOST_TEST_MESSAGE("second level cache statistics: " << secondLevelCacheStatistics->toString());
+		delete secondLevelCacheStatistics;
+	} else {
+		BOOST_TEST_MESSAGE("second level cache statistics is not available");
+	}
+	delete statistics;
 }
 
 BOOST_AUTO_TEST_SUITE_END()

@@ -11,6 +11,7 @@
 #include "CppHibernateCommons.h"
 #include "CppHibernateJObject.h"
 #include "CppHibernateJStringObject.h"
+#include "CppHibernateMatchMode.h"
 
 namespace cppHibernate {
 
@@ -74,9 +75,9 @@ public:
 	CppHibernateRestrictions between(const char *, CppHibernateJObject *&,
 			CppHibernateJObject *&);
 	CppHibernateRestrictions ilike(const char *, CppHibernateJStringObject *&,
-			const char *matchMode = "START");
+			CppHibernateMatchMode matchMode = CppHibernateMatchMode::START);
 	CppHibernateRestrictions like(const char *, CppHibernateJStringObject *&,
-			const char *matchMode = "START");
+			CppHibernateMatchMode matchMode = CppHibernateMatchMode::START);
 	CppHibernateRestrictions in(const char *,
 			std::deque<CppHibernateJObject*>&);
 	CppHibernateRestrictions isNotNULL(const char *);

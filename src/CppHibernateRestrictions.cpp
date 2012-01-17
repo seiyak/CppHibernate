@@ -364,13 +364,13 @@ jobject CppHibernateRestrictions::convertFrom(
  * Applies case insensitive like constrain on the specified property.
  * @param const char *propertyName Property to be constrained.
  * @param CppHibernateJStringObject *& object Object used to be against the specified property. The specified object is deleted during the method call.
- * @param const char *matchMode Match mode. One of 'ANYWHERE','END','EXACT' and 'START'. The default match mode is 'START'.
+ * @param CppHibernateMatchMode matchMode. One of CppHibernateMatchMode::ANYWHERE,CppHibernateMatchMode::END,CppHibernateMatchMode::EXACT and CppHibernateMatchMode::START. The default match mode is CppHibernateMatchMode::STARTS.
  * @return CppHibernateRestrictions Returns new CppHibernateRestrictions object.
  * @throw Throws exceptions when JNI encounters exceptions and invalid matchMode is specified.
  */
 CppHibernateRestrictions CppHibernateRestrictions::ilike(
 		const char *propertyName, CppHibernateJStringObject *& object,
-		const char *matchMode) {
+		CppHibernateMatchMode matchMode) {
 	jmethodID ilikeId =
 			this->env->GetStaticMethodID(
 					this->objClass,
@@ -380,7 +380,7 @@ CppHibernateRestrictions CppHibernateRestrictions::ilike(
 		this->throwException();
 	}
 	return this->callForLike(this->env->NewGlobalRef((jobject) ((ilikeId))),
-			propertyName, object, matchMode);
+			propertyName, object, matchMode.getMatchMode());
 }
 
 /**
@@ -393,7 +393,7 @@ CppHibernateRestrictions CppHibernateRestrictions::ilike(
  */
 CppHibernateRestrictions CppHibernateRestrictions::like(
 		const char *propertyName, CppHibernateJStringObject *& object,
-		const char *matchMode) {
+		CppHibernateMatchMode matchMode) {
 	jmethodID likeId =
 			this->env->GetStaticMethodID(
 					this->objClass,
@@ -403,7 +403,7 @@ CppHibernateRestrictions CppHibernateRestrictions::like(
 		this->throwException();
 	}
 	return this->callForLike(this->env->NewGlobalRef((jobject) ((likeId))),
-			propertyName, object, matchMode);
+			propertyName, object, matchMode.getMatchMode());
 }
 
 CppHibernateRestrictions CppHibernateRestrictions::callForLike(jobject methodId,
