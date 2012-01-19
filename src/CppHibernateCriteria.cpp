@@ -15,9 +15,9 @@ const char *CppHibernateCriteria::ORG_HIBERNATE_CRITERIA_LIST_NAME = "list";
 const char *CppHibernateCriteria::ORG_HIBERNATE_CRITERIA_LIST_SIGNATURE =
 		"()Ljava/util/List;";
 const char *CppHibernateCriteria::ORG_HIBERNATE_CRITERIA_CREATEALIAS_NAME =
-		"createCriteria";
+		"createAlias";
 const char *CppHibernateCriteria::ORG_HIBERNATE_CRITERIA_CREATEALIAS_SIGNATURE =
-		"(Ljava/lang/String;Ljava/lang/String;)Lorg/hibernate/Criteria";
+		"(Ljava/lang/String;Ljava/lang/String;)Lorg/hibernate/Criteria;";
 const char *CppHibernateCriteria::ORG_HIBERNATE_CRITERION_ORDER =
 		"org.hibernate.criterion.Order";
 const char *CppHibernateCriteria::ORG_HIBERNATE_CRITERIA_ADDORDER_NAME =
@@ -53,7 +53,7 @@ CppHibernateCriteria::CppHibernateCriteria(JNIEnv *env, jobject obj,
  */
 CppHibernateCriteria & CppHibernateCriteria::createAlias(const char *objPath,
 		const char *alias) {
-	//// TODO need to test this method when getting a little more practical sample java class.
+
 	this->checkAliasParams(objPath, alias);
 
 	jmethodID createAliasId = this->env->GetMethodID(this->objClass,

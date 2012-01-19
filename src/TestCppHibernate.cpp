@@ -1221,133 +1221,133 @@ BOOST_AUTO_TEST_CASE(testCppHibernateSessionFactoryOpenSession) {
 }
 
 BOOST_AUTO_TEST_CASE(testBeginTransaction) {
-//	CppHibernateJVMConfiguration configuration(ROOT_CLASS_PATH);
-//	AbstractClassLoader *loader = new URLClassLoader(configuration.getJNIEnv(),HIBERNATE_LIB_LOCATION);
-//	CppHibernateObjectHelper *helper = new CppHibernateObjectHelper(configuration.getJNIEnv(),loader);
-//	CppHibernate *hibernate = new CppHibernate(&configuration,loader);
-//	CppHibernateSession *session = NULL;
-//	CppHibernateTransaction *transaction;
-//
-//	session = hibernate->getSessionFactory()->openSession();
-//	BOOST_REQUIRE_NO_THROW(transaction = session->beginTransaction());
-//
-//	//// creates domain objects
-//	CppHibernateJObject *obj = helper->createJObjectWith("org.hibernateDomain.Event");
-//	CppHibernateJStringObject *title = helper->createJStringObjectWith("hibernateTitle1");
-//	obj->setVal("title",title);
-//
-//	CppHibernateJObject *obj2 = helper->createJObjectWith("org.hibernateDomain.Event");
-//	CppHibernateJStringObject *title2 = helper->createJStringObjectWith("hibernateTitle2");
-//	obj2->setVal("title",title2);
-//
-//	CppHibernateJObject *obj3 = helper->createJObjectWith("org.hibernateDomain.Event");
-//	CppHibernateJStringObject *title3 = helper->createJStringObjectWith("hibernateTitle3");
-//	obj3->setVal("title",title3);
-//
-//	//// save domain objects
-//	BOOST_REQUIRE_NO_THROW(session->saveObj(obj));
-//	BOOST_REQUIRE_THROW(session->saveObj(NULL),CppHibernateException);
-//	BOOST_REQUIRE_NO_THROW(session->saveObj(obj2));
-//	BOOST_REQUIRE_NO_THROW(session->saveObj(obj3));
-//
-//	//// do some work here
-//	CppHibernateCriteria criteria = session->createCriteria(obj);
-//	CppHibernateJCollectionObject *res1 = NULL;
-//	BOOST_REQUIRE_NO_THROW(res1 = criteria.list());
-//	BOOST_REQUIRE(res1->isEmpty() == false);
-//	BOOST_REQUIRE(res1->size() == 3);
-//	CppHibernateJObject *firstVal = NULL;
-//	BOOST_REQUIRE_NO_THROW(firstVal = res1->get(0));
-//	CppHibernateJStringObject *strVal = dynamic_cast<CppHibernateJStringObject *>(firstVal->getVal("title"));
-//	BOOST_REQUIRE(std::strncmp("hibernateTitle1",strVal->getVal(),std::strlen("hibernateTitle1")) == 0);
-//
-//	delete strVal;
-//	delete firstVal;
-//	delete res1;
-//
-//	CppHibernateJObject *date = helper->createJObjectWith("java.util.Date");
-//	obj->setVal("date",date);
-//	BOOST_REQUIRE_NO_THROW(session->setFlushMode("COMMIT"));
-//	BOOST_REQUIRE_THROW(session->setFlushMode("flush"),CppHibernateException);
-//	BOOST_REQUIRE_NO_THROW(session->updateObj(obj));
-//	BOOST_REQUIRE_NO_THROW(session->flush());
-//
-//	CppHibernateJCollectionObject *res2 = NULL;
-//	BOOST_REQUIRE_NO_THROW(res2 = criteria.addOrderAsc("title",false).list());
-//	BOOST_REQUIRE(res2->size() == 3);
-//
-//	//// ascending order with ignore case is false
-//	int i;
-//	CppHibernateJObject *element = NULL;
-//	CppHibernateJStringObject *elementTitle = NULL;
-//	for(i = 0; i < res2->size();i++) {
-//		BOOST_REQUIRE_NO_THROW(element = res2->get(i));
-//
-//		elementTitle = dynamic_cast<CppHibernateJStringObject *>(element->getVal("title"));
-//		std::string strTitle("hibernateTitle");
-//		std::stringstream ss;
-//		ss << (i + 1);
-//		strTitle += ss.str();
-//		std::cout << "strTitle is: " << strTitle.c_str() << " " << elementTitle->getVal() << std::endl;
-//		BOOST_REQUIRE(std::strncmp(strTitle.c_str(),elementTitle->getVal(),std::strlen(strTitle.c_str())) == 0);
-//
-//		delete elementTitle;
-//		elementTitle = NULL;
-//		delete element;
-//		element = NULL;
-//	}
-//
-//	delete res2;
-//
-//	//// descending order with ignore case is false
-//	CppHibernateJCollectionObject *res3 = NULL;
-//	CppHibernateCriteria criteria2 = session->createCriteria(obj);
-//	BOOST_REQUIRE_NO_THROW(res3 = criteria2.addOrderDesc("title",false).list());
-//
-//	CppHibernateJObject *element2 = NULL;
-//	CppHibernateJStringObject *elementTitle2 = NULL;
-//	for(i = 0; i < res3->size();i++) {
-//		BOOST_REQUIRE_NO_THROW(element2 = res3->get(i));
-//		BOOST_REQUIRE_NO_THROW(elementTitle2 = dynamic_cast<CppHibernateJStringObject *>(element2->getVal("title")));
-//
-//		std::string strTitle2("hibernateTitle");
-//		std::stringstream ss;
-//		ss << (res3->size() - i);
-//		strTitle2 += ss.str();
-//		std::cout << "strTitle2 " << strTitle2.c_str() << " " << elementTitle2->getVal() << std::endl;
-//		BOOST_REQUIRE(std::strncmp(strTitle2.c_str(),elementTitle2->getVal(),std::strlen(strTitle2.c_str())) == 0);
-//
-//		delete elementTitle2;
-//		elementTitle = NULL;
-//		delete element2;
-//		element2 = NULL;
-//	}
-//
-//	delete res3;
-//
-//	//// delete domain objects
-//	BOOST_REQUIRE_NO_THROW(session->deleteObj(obj));
-//	BOOST_REQUIRE_NO_THROW(session->deleteObj(obj2));
-//	BOOST_REQUIRE_NO_THROW(session->deleteObj(obj3));
-//	BOOST_REQUIRE_THROW(session->deleteObj(NULL),CppHibernateException);
-//
-//	//// commit the transaction
-//	BOOST_REQUIRE_NO_THROW(transaction->commit());
-//	BOOST_REQUIRE(transaction != NULL);
-//
-//	delete date;
-//	delete obj;
-//	delete obj2;
-//	delete obj3;
-//	delete title;
-//	delete title2;
-//	delete title3;
-//	delete helper;
-//	delete transaction;
-//	delete session;
-//	delete loader;
-//	delete hibernate;
-//	//delete configuration;
+	CppHibernateJVMConfiguration configuration(ROOT_CLASS_PATH);
+	AbstractClassLoader *loader = new URLClassLoader(configuration.getJNIEnv(),HIBERNATE_LIB_LOCATION);
+	CppHibernateObjectHelper *helper = new CppHibernateObjectHelper(configuration.getJNIEnv(),loader);
+	CppHibernate *hibernate = new CppHibernate(&configuration,loader);
+	CppHibernateSession *session = NULL;
+	CppHibernateTransaction *transaction;
+
+	session = hibernate->getSessionFactory()->openSession();
+	BOOST_REQUIRE_NO_THROW(transaction = session->beginTransaction());
+
+	//// creates domain objects
+	CppHibernateJObject *obj = helper->createJObjectWith("org.hibernateDomain.Event");
+	CppHibernateJStringObject *title = helper->createJStringObjectWith("hibernateTitle1");
+	obj->setVal("title",title);
+
+	CppHibernateJObject *obj2 = helper->createJObjectWith("org.hibernateDomain.Event");
+	CppHibernateJStringObject *title2 = helper->createJStringObjectWith("hibernateTitle2");
+	obj2->setVal("title",title2);
+
+	CppHibernateJObject *obj3 = helper->createJObjectWith("org.hibernateDomain.Event");
+	CppHibernateJStringObject *title3 = helper->createJStringObjectWith("hibernateTitle3");
+	obj3->setVal("title",title3);
+
+	//// save domain objects
+	BOOST_REQUIRE_NO_THROW(session->saveObj(obj));
+	BOOST_REQUIRE_THROW(session->saveObj(NULL),CppHibernateException);
+	BOOST_REQUIRE_NO_THROW(session->saveObj(obj2));
+	BOOST_REQUIRE_NO_THROW(session->saveObj(obj3));
+
+	//// do some work here
+	CppHibernateCriteria criteria = session->createCriteria(obj);
+	CppHibernateJCollectionObject *res1 = NULL;
+	BOOST_REQUIRE_NO_THROW(res1 = criteria.list());
+	BOOST_REQUIRE(res1->isEmpty() == false);
+	BOOST_REQUIRE(res1->size() == 3);
+	CppHibernateJObject *firstVal = NULL;
+	BOOST_REQUIRE_NO_THROW(firstVal = res1->get(0));
+	CppHibernateJStringObject *strVal = dynamic_cast<CppHibernateJStringObject *>(firstVal->getVal("title"));
+	BOOST_REQUIRE(std::strncmp("hibernateTitle1",strVal->getVal(),std::strlen("hibernateTitle1")) == 0);
+
+	delete strVal;
+	delete firstVal;
+	delete res1;
+
+	CppHibernateJObject *date = helper->createJObjectWith("java.util.Date");
+	obj->setVal("date",date);
+	BOOST_REQUIRE_NO_THROW(session->setFlushMode("COMMIT"));
+	BOOST_REQUIRE_THROW(session->setFlushMode("flush"),CppHibernateException);
+	BOOST_REQUIRE_NO_THROW(session->updateObj(obj));
+	BOOST_REQUIRE_NO_THROW(session->flush());
+
+	CppHibernateJCollectionObject *res2 = NULL;
+	BOOST_REQUIRE_NO_THROW(res2 = criteria.addOrderAsc("title",false).list());
+	BOOST_REQUIRE(res2->size() == 3);
+
+	//// ascending order with ignore case is false
+	int i;
+	CppHibernateJObject *element = NULL;
+	CppHibernateJStringObject *elementTitle = NULL;
+	for(i = 0; i < res2->size();i++) {
+		BOOST_REQUIRE_NO_THROW(element = res2->get(i));
+
+		elementTitle = dynamic_cast<CppHibernateJStringObject *>(element->getVal("title"));
+		std::string strTitle("hibernateTitle");
+		std::stringstream ss;
+		ss << (i + 1);
+		strTitle += ss.str();
+		std::cout << "strTitle is: " << strTitle.c_str() << " " << elementTitle->getVal() << std::endl;
+		BOOST_REQUIRE(std::strncmp(strTitle.c_str(),elementTitle->getVal(),std::strlen(strTitle.c_str())) == 0);
+
+		delete elementTitle;
+		elementTitle = NULL;
+		delete element;
+		element = NULL;
+	}
+
+	delete res2;
+
+	//// descending order with ignore case is false
+	CppHibernateJCollectionObject *res3 = NULL;
+	CppHibernateCriteria criteria2 = session->createCriteria(obj);
+	BOOST_REQUIRE_NO_THROW(res3 = criteria2.addOrderDesc("title",false).list());
+
+	CppHibernateJObject *element2 = NULL;
+	CppHibernateJStringObject *elementTitle2 = NULL;
+	for(i = 0; i < res3->size();i++) {
+		BOOST_REQUIRE_NO_THROW(element2 = res3->get(i));
+		BOOST_REQUIRE_NO_THROW(elementTitle2 = dynamic_cast<CppHibernateJStringObject *>(element2->getVal("title")));
+
+		std::string strTitle2("hibernateTitle");
+		std::stringstream ss;
+		ss << (res3->size() - i);
+		strTitle2 += ss.str();
+		std::cout << "strTitle2 " << strTitle2.c_str() << " " << elementTitle2->getVal() << std::endl;
+		BOOST_REQUIRE(std::strncmp(strTitle2.c_str(),elementTitle2->getVal(),std::strlen(strTitle2.c_str())) == 0);
+
+		delete elementTitle2;
+		elementTitle = NULL;
+		delete element2;
+		element2 = NULL;
+	}
+
+	delete res3;
+
+	//// delete domain objects
+	BOOST_REQUIRE_NO_THROW(session->deleteObj(obj));
+	BOOST_REQUIRE_NO_THROW(session->deleteObj(obj2));
+	BOOST_REQUIRE_NO_THROW(session->deleteObj(obj3));
+	BOOST_REQUIRE_THROW(session->deleteObj(NULL),CppHibernateException);
+
+	//// commit the transaction
+	BOOST_REQUIRE_NO_THROW(transaction->commit());
+	BOOST_REQUIRE(transaction != NULL);
+
+	delete date;
+	delete obj;
+	delete obj2;
+	delete obj3;
+	delete title;
+	delete title2;
+	delete title3;
+	delete helper;
+	delete transaction;
+	delete session;
+	delete loader;
+	delete hibernate;
+	//delete configuration;
 }
 
 BOOST_AUTO_TEST_CASE(testCppHibernateRestrictions) {
@@ -1961,45 +1961,45 @@ BOOST_AUTO_TEST_CASE(testForSample) {
 
 BOOST_AUTO_TEST_CASE(testCppHibernateSecondLevelCache) {
 
-	CppHibernateJVMConfiguration configuration(ROOT_CLASS_PATH);
-	URLClassLoader loader = URLClassLoader(configuration.getJNIEnv(),HIBERNATE_LIB_LOCATION);
-	CppHibernateObjectHelper helper = CppHibernateObjectHelper(configuration.getJNIEnv(),&loader);
-	CppHibernate hibernate = CppHibernate(&configuration,&loader);
-
-	CppHibernateSession *session = hibernate.getSessionFactory()->getCurrentSession();
-	CppHibernateTransaction *transaction = session->beginTransaction();
-
-	CppHibernateJObject *obj1 = helper.createJObjectWith("org.hibernateDomain.Event");
-	CppHibernateJStringObject *obj1Str = helper.createJStringObjectWith("title1");
-	obj1->setVal("title",obj1Str);
-	session->saveObj(obj1);
-
-	CppHibernateCriteria criteria = session->createCriteria(obj1);
-	CppHibernateJCollectionObject *res = criteria.addLe("id",helper.createJLongObjectWith(4)).addIsNotNULL("title").addIlike("title",helper.createJStringObjectWith("1"),"END").addIdEq(helper.createJLongObjectWith(1)).list();
-	BOOST_REQUIRE(res->size() == 1);
-
-	CppHibernateQuery query = session->createQuery("from Event event where event.id > :i and event.title = :t");
-	CppHibernateJCollectionObject *res2 = query.setParameter(helper.createJStringObjectWith("i"),helper.createJLongObjectWith(0)).setParameter(helper.createJStringObjectWith("t"),helper.createJStringObjectWith("title1")).setCacheable(true).setCacheRegion("org.hibernateDomain.Event").list();
-	BOOST_REQUIRE(res2->size() == 1);
-	transaction->commit();
-
-	delete res;
-	delete res2;
-	delete obj1;
-	delete obj1Str;
-	delete transaction;
-	delete session;
-
-	CppHibernateStatistics *statistics = hibernate.getSessionFactory()->getStatistics();
-	BOOST_TEST_MESSAGE("statistics: " << statistics->toString());
-	CppHibernateSecondLevelCacheStatistics *secondLevelCacheStatistics = statistics->getSecondLevelCacheStatistics("org.hibernateDomain.Event");
-	if(secondLevelCacheStatistics != NULL) {
-		BOOST_TEST_MESSAGE("second level cache statistics: " << secondLevelCacheStatistics->toString());
-		delete secondLevelCacheStatistics;
-	} else {
-		BOOST_TEST_MESSAGE("second level cache statistics is not available");
-	}
-	delete statistics;
+//	CppHibernateJVMConfiguration configuration(ROOT_CLASS_PATH);
+//	URLClassLoader loader = URLClassLoader(configuration.getJNIEnv(),HIBERNATE_LIB_LOCATION);
+//	CppHibernateObjectHelper helper = CppHibernateObjectHelper(configuration.getJNIEnv(),&loader);
+//	CppHibernate hibernate = CppHibernate(&configuration,&loader);
+//
+//	CppHibernateSession *session = hibernate.getSessionFactory()->getCurrentSession();
+//	CppHibernateTransaction *transaction = session->beginTransaction();
+//
+//	CppHibernateJObject *obj1 = helper.createJObjectWith("org.hibernateDomain.Event");
+//	CppHibernateJStringObject *obj1Str = helper.createJStringObjectWith("title1");
+//	obj1->setVal("title",obj1Str);
+//	session->saveObj(obj1);
+//
+//	CppHibernateCriteria criteria = session->createCriteria(obj1);
+//	CppHibernateJCollectionObject *res = criteria.addLe("id",helper.createJLongObjectWith(4)).addIsNotNULL("title").addIlike("title",helper.createJStringObjectWith("1"),"END").addIdEq(helper.createJLongObjectWith(1)).list();
+//	BOOST_REQUIRE(res->size() == 1);
+//
+//	CppHibernateQuery query = session->createQuery("from Event event where event.id > :i and event.title = :t");
+//	CppHibernateJCollectionObject *res2 = query.setParameter(helper.createJStringObjectWith("i"),helper.createJLongObjectWith(0)).setParameter(helper.createJStringObjectWith("t"),helper.createJStringObjectWith("title1")).setCacheable(true).setCacheRegion("org.hibernateDomain.Event").list();
+//	BOOST_REQUIRE(res2->size() == 1);
+//	transaction->commit();
+//
+//	delete res;
+//	delete res2;
+//	delete obj1;
+//	delete obj1Str;
+//	delete transaction;
+//	delete session;
+//
+//	CppHibernateStatistics *statistics = hibernate.getSessionFactory()->getStatistics();
+//	BOOST_TEST_MESSAGE("statistics: " << statistics->toString());
+//	CppHibernateSecondLevelCacheStatistics *secondLevelCacheStatistics = statistics->getSecondLevelCacheStatistics("org.hibernateDomain.Event");
+//	if(secondLevelCacheStatistics != NULL) {
+//		BOOST_TEST_MESSAGE("second level cache statistics: " << secondLevelCacheStatistics->toString());
+//		delete secondLevelCacheStatistics;
+//	} else {
+//		BOOST_TEST_MESSAGE("second level cache statistics is not available");
+//	}
+//	delete statistics;
 }
 
 BOOST_AUTO_TEST_SUITE_END()
